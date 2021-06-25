@@ -1,3 +1,4 @@
+
 import torch
 from torch import nn
 import torch.optim as optim
@@ -19,7 +20,7 @@ percept = lpips.PerceptualLoss(model='net-lin', net='vgg', use_gpu=True)
 
 
 #torch.backends.cudnn.benchmark = True
-
+torch.cuda.empty_cache()
 
 def crop_image_by_part(image, part):
     hw = image.shape[2]//2
@@ -54,7 +55,7 @@ def train(args):
     data_root = args.path
     total_iterations = args.iter
     checkpoint = args.ckpt
-    batch_size = args.batch_size
+    batch_size = 100  # args.batch_size
     im_size = args.im_size
     ndf = 64
     ngf = 64
@@ -71,6 +72,11 @@ def train(args):
     device = torch.device("cpu")
     if use_cuda:
         device = torch.device("cuda:0")
+        print(f"Using gpu number: {device}")
+	# print("using half of gpu")
+        print(f"Device count: {torch.cuda.device_count()}")
+        torch.cuda.set_per_process_memory_fraction(1.0, 0)
+    # torch.cuda.empty_cache()
 
     transform_list = [
             transforms.Resize((int(im_size),int(im_size))),
@@ -189,8 +195,8 @@ if __name__ == "__main__":
     parser.add_argument('--name', type=str, default='test1', help='experiment name')
     parser.add_argument('--iter', type=int, default=50000, help='number of iterations')
     parser.add_argument('--start_iter', type=int, default=0, help='the iteration to start training')
-    parser.add_argument('--batch_size', type=int, default=8, help='mini batch number of images')
-    parser.add_argument('--im_size', type=int, default=1024, help='image resolution')
+    parser.add_argument('--batch_size', type=int, default=1, help='mini batch number of images')
+    parser.add_argument('--im_size', type=int, default=256, help='image resolution')
     parser.add_argument('--ckpt', type=str, default='None', help='checkpoint weight path if have one')
 
 
